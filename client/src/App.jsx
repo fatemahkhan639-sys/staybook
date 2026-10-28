@@ -1,5 +1,6 @@
 import { Routes, Route } from 'react-router-dom';
 import Navbar from './components/Navbar';
+import TravelTabs from './components/TravelTabs';
 import Footer from './components/Footer';
 import HomePage from './pages/HomePage';
 import SearchPage from './pages/SearchPage';
@@ -22,6 +23,12 @@ import VerifyPage from './pages/VerifyPage';
 import TermsPage from './pages/TermsPage';
 import PrivacyPage from './pages/PrivacyPage';
 import ContactPage from './pages/ContactPage';
+import BookingLookupPage from './pages/BookingLookupPage';
+import FlightsPage from './pages/FlightsPage';
+import CarsPage from './pages/CarsPage';
+import ActivitiesPage from './pages/ActivitiesPage';
+import TransfersPage from './pages/TransfersPage';
+import VerticalCheckoutPage from './pages/VerticalCheckoutPage';
 import AdminPage from './pages/AdminPage';
 import NotFoundPage from './pages/NotFoundPage';
 
@@ -30,6 +37,7 @@ export default function App() {
   return (
     <div className="d-flex flex-column min-vh-100">
       <Navbar />
+      <TravelTabs />
       <main className="flex-grow-1">
         <Routes>
           <Route path="/" element={<HomePage />} />
@@ -42,6 +50,12 @@ export default function App() {
           <Route path="/reset-password/:token" element={<ResetPasswordPage />} />
           <Route path="/verify/:token" element={<VerifyPage />} />
           <Route path="/my-bookings" element={<MyBookingsPage />} />
+          <Route path="/booking-lookup" element={<BookingLookupPage />} />
+          <Route path="/flights" element={<FlightsPage />} />
+          <Route path="/cars" element={<CarsPage />} />
+          <Route path="/activities" element={<ActivitiesPage />} />
+          <Route path="/transfers" element={<TransfersPage />} />
+          <Route path="/book/:kind/:id" element={<VerticalCheckoutPage />} />
           <Route path="/account" element={<AccountPage />} />
           <Route path="/wishlist" element={<WishlistPage />} />
           <Route path="/compare" element={<ComparePage />} />

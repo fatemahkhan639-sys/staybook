@@ -8,8 +8,24 @@ rupees. React + Vite + Bootstrap on the front, Express + MongoDB
 ## What it does
 
 - **Search + filters:** destination, budget, property type, stars,
-  review score, amenities, free cancellation, breakfast, bed type.
-  Sort by price, rating, or distance from the city center.
+  review score, amenities, free cancellation, breakfast, bed type,
+  pets allowed. Sort by price, rating, or distance from the city
+  center, with pages when there are more results than one page.
+- **Travel tabs (Stays, Flights, Car rental, Attractions, Airport
+  taxis):** 12 daily flights, 10 rental cars, 10 tours and day
+  trips, and 8 fixed-price airport pickups, all searchable and
+  bookable the same way as stays — pay on the day, with the price
+  worked out on the server. Bookings show under My trips and can
+  also be found without an account by reference + email.
+- **Guest bookings:** a booking made without an account can be
+  found and cancelled later from `/booking-lookup` with its
+  reference and checkout email. Signed-in guests can also move a
+  booking to new dates (availability re-checked, price reworked).
+- **Children's ages:** the search asks each child's age, and it is
+  stored on the booking for the hotel.
+- **Similar stays and recently viewed:** each hotel page shows
+  other stays in the same city and the stays you looked at before,
+  plus copy-link and WhatsApp share buttons.
 - **Hotel pages:** photo gallery, map with the approximate area,
   nearby places, category review scores, house rules and fine print,
   host notes, guest reviews with host replies, Q&A, and a room table
@@ -36,6 +52,8 @@ rupees. React + Vite + Bootstrap on the front, Express + MongoDB
 24 stays across 15 Pakistani cities, each written out individually
 (no two listings read the same), with guest reviews, deals, and
 three discount codes: WELCOME10 (10%), STAY15 (15%), FAMILY20 (20%).
+The travel verticals seed alongside: 12 flights, 10 rental cars,
+10 activities and 8 airport transfers.
 
 Sign in with:
 

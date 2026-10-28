@@ -212,6 +212,10 @@ export default function CheckoutPage() {
           adults: Number(params.get('adults')) || 2,
           children: Number(params.get('children')) || 0,
           rooms,
+          childrenAges: (params.get('childrenAges') || '')
+            .split(',')
+            .filter(Boolean)
+            .map(Number),
         },
         guestDetails: form,
         specialRequests: form.specialRequests,

@@ -64,6 +64,10 @@ export default function HotelPage() {
   const [answerTexts, setAnswerTexts] = useState({});
   const [alertPrice, setAlertPrice] = useState('');
   const [alertMessage, setAlertMessage] = useState('');
+  const [similar, setSimilar] = useState([]);
+  const [recent, setRecent] = useState([]);
+  const [copied, setCopied] = useState(false);
+  const [replyTexts, setReplyTexts] = useState({});
 
   // Dates and party size ride along so the server can say how
   // many rooms of each type are actually still free.
@@ -87,6 +91,51 @@ export default function HotelPage() {
       .catch(() => setQuestions([]));
   }, [id]); // eslint-disable-line react-hooks/exhaustive-deps
 
+  // Similar stays in the same city, and the recently-viewed list
+  // kept in the browser (no account needed for it).
+  useEffect(() => {
+    if (!hotel) return;
+    api
+      .get(`/api/hotels?destination=${encodeURIComponent(hotel.city)}&limit=5`)
+      .then((data) =>
+        setSimilar((data.hotels || []).filter((h) => h._id !== hotel._id).slice(0, 4))
+      )
+      .catch(() => setSimilar([]));
+    try {
+      const stored = JSON.parse(localStorage.getItem('staybook_recent') || '[]');
+      const entry = {
+        _id: hotel._id,
+        name: hotel.name,
+        city: hotel.city,
+        pricePerNight: hotel.pricePerNight,
+        image: (hotel.images || [])[0] || '/images/hero.jpg',
+      };
+      const next = [entry, ...stored.filter((h) => h._id !== hotel._id)].slice(0, 6);
+      localStorage.setItem('staybook_recent', JSON.stringify(next));
+      setRecent(next.filter((h) => h._id !== hotel._id));
+    } catch {
+      // Private mode or full storage: recently-viewed just stays empty.
+    }
+  }, [hotel]);
+
+  async function submitReply(event, reviewId) {
+    event.preventDefault();
+    const text = (replyTexts[reviewId] || '').trim();
+    if (!text) return;
+    try {
+      const updated = await api.post(
+        '/api/reviews/' + reviewId + '/reply',
+        { hostReply: text },
+        true
+      );
+      setReviews(reviews.map((r) => (r._id === reviewId ? updated : r)));
+      setReplyTexts({ ...replyTexts, [reviewId]: '' });
+    } catch {
+      // The form only shows to owners and admins, so a failure
+      // here is just a safety net, not something to surface.
+    }
+  }
+
   function nights() {
     const checkIn = params.get('checkIn');
     const checkOut = params.get('checkOut');
@@ -103,6 +152,7 @@ export default function HotelPage() {
       checkOut: params.get('checkOut') || '',
       adults: params.get('adults') || 2,
       children: params.get('children') || 0,
+      childrenAges: params.get('childrenAges') || '',
       rooms: roomCounts[room.name] || 1,
     });
     return `/checkout?${query.toString()}`;
@@ -219,6 +269,25 @@ export default function HotelPage() {
             >
               {inCompare ? t('compare.added') : t('compare.add')}
             </button>
+            <button
+              className="btn btn-outline-secondary btn-sm ms-2"
+              onClick={() => {
+                navigator.clipboard?.writeText(window.location.href).then(() => {
+                  setCopied(true);
+                  setTimeout(() => setCopied(false), 2000);
+                });
+              }}
+            >
+              {copied ? t('hotel.linkCopied') : t('hotel.copyLink')}
+            </button>
+            <a
+              className="btn btn-outline-success btn-sm ms-2"
+              href={`https://wa.me/?text=${encodeURIComponent(window.location.href)}`}
+              target="_blank"
+              rel="noreferrer"
+            >
+              WhatsApp
+            </a>
           </div>
         </div>
       </div>
@@ -484,6 +553,24 @@ export default function HotelPage() {
               {review.hostReply}
             </p>
           )}
+          {user &&
+            !review.hostReply &&
+            (String(hotel.listedBy?._id || hotel.listedBy) === String(user._id) ||
+              user.role === 'admin') && (
+              <form className="d-flex gap-2 mt-2" onSubmit={(e) => submitReply(e, review._id)}>
+                <input
+                  className="form-control form-control-sm"
+                  placeholder={t('hotel.replyPlaceholder')}
+                  value={replyTexts[review._id] || ''}
+                  onChange={(e) =>
+                    setReplyTexts({ ...replyTexts, [review._id]: e.target.value })
+                  }
+                />
+                <button className="btn btn-sm btn-outline-primary" type="submit">
+                  {t('hotel.sendReply')}
+                </button>
+              </form>
+            )}
         </div>
       ))}
 
@@ -523,6 +610,47 @@ export default function HotelPage() {
         <p className="small text-muted mt-3">
           <Link to="/login">{t('nav.signIn')}</Link> {t('hotel.signInToReview')}
         </p>
+      )}
+
+      {similar.length > 0 && (
+        <>
+          <h5 className="mt-5">{t('hotel.similarStays', { city: hotel.city })}</h5>
+          <div className="row g-3">
+            {similar.map((s) => (
+              <div className="col-md-3" key={s._id}>
+                <Link to={`/hotel/${s._id}`} className="text-decoration-none text-dark">
+                  <div className="card h-100">
+                    <img
+                      src={(s.images || [])[0] || '/images/hero.jpg'}
+                      className="card-img-top"
+                      style={{ height: 120, objectFit: 'cover' }}
+                      alt={s.name}
+                    />
+                    <div className="card-body p-2">
+                      <strong className="small">{s.name}</strong>
+                      <div className="small text-muted">
+                        {format(s.pricePerNight)} / night
+                      </div>
+                    </div>
+                  </div>
+                </Link>
+              </div>
+            ))}
+          </div>
+        </>
+      )}
+
+      {recent.length > 0 && (
+        <>
+          <h5 className="mt-5">{t('hotel.recentlyViewed')}</h5>
+          <div className="d-flex gap-2 flex-wrap">
+            {recent.map((r) => (
+              <Link key={r._id} to={`/hotel/${r._id}`} className="btn btn-outline-secondary btn-sm">
+                {r.name} · {r.city}
+              </Link>
+            ))}
+          </div>
+        </>
       )}
     </div>
   );

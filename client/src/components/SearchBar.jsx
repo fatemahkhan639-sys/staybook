@@ -14,6 +14,14 @@ export default function SearchBar({ initial = {} }) {
   const [adults, setAdults] = useState(initial.adults || 2);
   const [children, setChildren] = useState(initial.children || 0);
   const [rooms, setRooms] = useState(initial.rooms || 1);
+  const [childrenAges, setChildrenAges] = useState(() =>
+    initial.childrenAges ? String(initial.childrenAges).split(',').map(Number) : []
+  );
+
+  function changeChildren(n) {
+    setChildren(n);
+    setChildrenAges((prev) => Array.from({ length: n }, (_, i) => prev[i] ?? 5));
+  }
 
   function handleSubmit(event) {
     event.preventDefault();
@@ -23,6 +31,7 @@ export default function SearchBar({ initial = {} }) {
       checkOut,
       adults,
       children,
+      childrenAges: children > 0 ? childrenAges.join(',') : '',
       rooms,
     });
     navigate(`/search?${params.toString()}`);
@@ -76,7 +85,7 @@ export default function SearchBar({ initial = {} }) {
             <select
               className="form-select form-select-sm"
               value={children}
-              onChange={(e) => setChildren(Number(e.target.value))}
+              onChange={(e) => changeChildren(Number(e.target.value))}
               aria-label="Children"
             >
               {[0, 1, 2, 3, 4].map((n) => (
@@ -99,6 +108,33 @@ export default function SearchBar({ initial = {} }) {
             </select>
           </div>
         </div>
+        {children > 0 && (
+          <div className="col-md-12">
+            <label className="form-label small mb-1">{t('search.childrenAges')}</label>
+            <div className="d-flex gap-1 flex-wrap">
+              {childrenAges.map((age, i) => (
+                <select
+                  key={i}
+                  className="form-select form-select-sm"
+                  style={{ maxWidth: 110 }}
+                  value={age}
+                  onChange={(e) => {
+                    const next = [...childrenAges];
+                    next[i] = Number(e.target.value);
+                    setChildrenAges(next);
+                  }}
+                  aria-label={`Child ${i + 1} age`}
+                >
+                  {Array.from({ length: 18 }, (_, a) => (
+                    <option key={a} value={a}>
+                      {a} {t('search.yearsOld')}
+                    </option>
+                  ))}
+                </select>
+              ))}
+            </div>
+          </div>
+        )}
         <div className="col-md-1 d-flex align-items-end">
           <button className="btn btn-primary w-100" type="submit">
             {t('search.search')}

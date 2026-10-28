@@ -19,6 +19,9 @@ const bookingSchema = new mongoose.Schema(
       adults: { type: Number, default: 2 },
       children: { type: Number, default: 0 },
       rooms: { type: Number, default: 1 },
+      // Ages of the children, when the guest gave them. Hotels
+      // use them for extra beds and child pricing, if any.
+      childrenAges: { type: [Number], default: [] },
     },
     guestDetails: {
       firstName: { type: String, required: true },

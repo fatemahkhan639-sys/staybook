@@ -18,11 +18,11 @@ function scoreLabel(score) {
 // GET /api/hotels — search + filters + sorting.
 // Query params: destination, type, minPrice, maxPrice, minStars,
 // minScore, amenities (comma separated), freeCancellation,
-// breakfastIncluded, bedType, sort, page, limit.
+// breakfastIncluded, bedType, petsAllowed, sort, page, limit.
 router.get('/', async (req, res) => {
   const {
     destination, type, minPrice, maxPrice, minStars, minScore,
-    amenities, freeCancellation, breakfastIncluded, bedType,
+    amenities, freeCancellation, breakfastIncluded, bedType, petsAllowed,
     deals, sort, page = 1, limit = 20,
   } = req.query;
 
@@ -57,6 +57,9 @@ router.get('/', async (req, res) => {
     // "King bed + double bed", so match the chosen word
     // anywhere in the room's bed setup.
     filter['rooms.bedType'] = { $regex: bedType, $options: 'i' };
+  }
+  if (petsAllowed === 'true') {
+    filter['houseRules.petsAllowed'] = true;
   }
   // Deals page: only stays whose original price is higher than
   // the price guests actually pay.

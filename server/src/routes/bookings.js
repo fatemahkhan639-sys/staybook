@@ -96,6 +96,9 @@ router.post('/', optionalAuth, async (req, res) => {
       adults: guests?.adults || 2,
       children: guests?.children || 0,
       rooms: roomCount,
+      childrenAges: Array.isArray(guests?.childrenAges)
+        ? guests.childrenAges.map(Number).filter((a) => a >= 0 && a <= 17)
+        : [],
     },
     guestDetails,
     specialRequests: specialRequests || guestDetails.specialRequests || '',
@@ -136,6 +139,88 @@ router.patch('/:id/cancel', requireAuth, async (req, res) => {
   const booking = await Booking.findOne({ _id: req.params.id, user: req.userId });
   if (!booking) return res.status(404).json({ message: 'Booking not found.' });
 
+  booking.status = 'cancelled';
+  await booking.save();
+  return res.json(booking);
+});
+
+// PATCH /api/bookings/:id/dates — move your own booking to new
+// dates. Availability is re-checked without counting this booking
+// itself, and the price is worked out again from the new nights;
+// the loyalty and coupon amounts already applied stay as they were.
+router.patch('/:id/dates', requireAuth, async (req, res) => {
+  const { checkIn, checkOut } = req.body;
+  const booking = await Booking.findOne({ _id: req.params.id, user: req.userId });
+  if (!booking) return res.status(404).json({ message: 'Booking not found.' });
+  if (booking.status === 'cancelled') {
+    return res.status(400).json({ message: 'A cancelled booking cannot be moved.' });
+  }
+
+  const nights = countNights(checkIn, checkOut);
+  if (!checkIn || !checkOut || nights < 1) {
+    return res.status(400).json({ message: 'Check-out must be after check-in.' });
+  }
+  if (startOfDay(checkIn) < startOfDay(new Date())) {
+    return res.status(400).json({ message: 'Check-in cannot be in the past.' });
+  }
+
+  const hotel = await Hotel.findById(booking.hotel);
+  if (!hotel) return res.status(404).json({ message: 'Hotel not found.' });
+  const room = hotel.rooms.find((r) => r.name === booking.roomName);
+  if (!room) return res.status(400).json({ message: 'That room type is not available here.' });
+
+  const roomCount = booking.guests?.rooms || 1;
+  const taken = await bookedUnits(hotel._id, booking.roomName, checkIn, checkOut, booking._id);
+  if (taken + roomCount > (room.totalUnits ?? 5)) {
+    return res.status(400).json({ message: 'Not enough rooms left for those dates.' });
+  }
+
+  const subtotal = room.pricePerNight * nights * roomCount;
+  const taxAmount = Math.round(subtotal * 0.16);
+  booking.checkIn = checkIn;
+  booking.checkOut = checkOut;
+  booking.nights = nights;
+  booking.subtotal = subtotal;
+  booking.taxAmount = taxAmount;
+  booking.totalPrice = Math.max(
+    0,
+    subtotal + taxAmount - (booking.loyaltyDiscount || 0) - (booking.discountAmount || 0)
+  );
+  await booking.save();
+  return res.json(booking);
+});
+
+// Guest bookings have no account, so they are found by the booking
+// reference plus the email given at checkout. A wrong email gives
+// the same "not found" as a wrong reference, so one cannot be used
+// to probe for the other.
+const { Types } = require('mongoose');
+
+async function findGuestBooking(reference, email) {
+  if (!reference || !email || !Types.ObjectId.isValid(reference)) return null;
+  const emailMatches = (b) =>
+    (b.guestDetails?.email || '').toLowerCase() === email.toLowerCase();
+  const booking = await Booking.findById(reference).populate('hotel', 'name city images');
+  if (booking && !booking.user && emailMatches(booking)) return booking;
+  // The same reference + email also finds a flight, car, activity
+  // or transfer booking, which lives in its own collection.
+  const VerticalBooking = require('../models/VerticalBooking');
+  const vertical = await VerticalBooking.findById(reference);
+  if (vertical && !vertical.user && emailMatches(vertical)) return vertical;
+  return null;
+}
+
+// GET /api/bookings/guest/lookup?reference=&email=
+router.get('/guest/lookup', async (req, res) => {
+  const booking = await findGuestBooking(req.query.reference, req.query.email);
+  if (!booking) return res.status(404).json({ message: 'Booking not found.' });
+  return res.json(booking);
+});
+
+// POST /api/bookings/guest/cancel { reference, email }
+router.post('/guest/cancel', async (req, res) => {
+  const booking = await findGuestBooking(req.body.reference, req.body.email);
+  if (!booking) return res.status(404).json({ message: 'Booking not found.' });
   booking.status = 'cancelled';
   await booking.save();
   return res.json(booking);

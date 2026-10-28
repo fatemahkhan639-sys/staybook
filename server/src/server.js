@@ -23,6 +23,7 @@ const questionRoutes = require('./routes/questions');
 const paymentRoutes = require('./routes/payments');
 const adminRoutes = require('./routes/admin');
 const contactRoutes = require('./routes/contact');
+const verticalRoutes = require('./routes/verticals');
 
 const app = express();
 
@@ -47,6 +48,7 @@ app.use('/api/alerts', alertRoutes);
 app.use('/api/payments', paymentRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/contact', contactRoutes);
+app.use('/api', verticalRoutes);
 
 // One plain error handler, so API failures always come back as JSON.
 app.use((err, req, res, next) => {
@@ -92,6 +94,16 @@ connectDB()
       ]);
       await insertDemoData();
       console.log('Demo data upgraded to the new listings.');
+    }
+
+    // The travel verticals seed on their own: a database that
+    // has hotels but no flights yet gets the flights, cars,
+    // activities and transfers on this boot.
+    const Flight = require('./models/Flight');
+    const { insertVerticalData } = require('./seedVerticalData');
+    if ((await Flight.countDocuments()) === 0) {
+      await insertVerticalData();
+      console.log('Vertical data inserted (flights, cars, activities, transfers).');
     }
 
     app.listen(PORT, () => console.log(`StayBook API running on port ${PORT}`));

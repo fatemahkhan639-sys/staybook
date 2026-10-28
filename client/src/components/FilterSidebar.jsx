@@ -133,6 +133,16 @@ export default function FilterSidebar({ filters, onChange }) {
         />
         <label className="form-check-label small">{t('filters.breakfast')}</label>
       </div>
+
+      <div className="form-check mt-2">
+        <input
+          className="form-check-input"
+          type="checkbox"
+          checked={filters.petsAllowed}
+          onChange={(e) => set('petsAllowed', e.target.checked)}
+        />
+        <label className="form-check-label small">{t('filters.pets')}</label>
+      </div>
     </div>
   );
 }
