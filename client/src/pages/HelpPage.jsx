@@ -1,7 +1,10 @@
 import { Link } from 'react-router-dom';
+import { useLanguage } from '../i18n';
 
 // Help Center: the questions guests actually ask, answered in
-// plain words. Click a question to open its answer.
+// plain words. Click a question to open its answer. The wording
+// here is deliberately local — how the owner would explain it
+// on the phone, not a help-desk template.
 const sections = [
   {
     title: 'Stays',
@@ -9,12 +12,12 @@ const sections = [
       {
         question: 'How do I book a stay?',
         answer:
-          'Search a destination and dates, open a hotel, pick a room in the availability table, then follow the three booking steps: your selection, your details, and finish booking. You are not charged at reservation time.',
+          'Search a city and your dates, open a hotel, pick a room, then follow the three steps: your selection, your details, and finish booking. You pay nothing at reservation time on most stays.',
       },
       {
         question: 'Can I cancel a booking?',
         answer:
-          'Yes. Sign in, open My trips, and cancel the booking there. Rooms marked "Free cancellation" can be cancelled without a fee; other rates follow the terms shown on the hotel page.',
+          'Yes. Sign in, open My trips, and cancel there. Rooms marked "Free cancellation" cost nothing to cancel; other rates follow the terms shown on the hotel page before you book.',
       },
       {
         question: 'What does the review score mean?',
@@ -29,11 +32,17 @@ const sections = [
       {
         question: 'When do I pay?',
         answer:
-          'Most stays here are pay-at-the-property: you reserve now and pay when you arrive. The hotel page shows the exact terms for each room.',
+          'Most stays here are pay-at-the-property: you reserve now and pay at the front desk when you arrive, in cash or by card at the hotel. Some stays also accept JazzCash or Easypaisa — the hotel page says which.',
       },
       {
         question: 'Are there booking fees?',
-        answer: 'No. The price you see is the price you pay for the stay.',
+        answer:
+          'No. The price on the room is the price you pay, plus the 16% GST shown separately at checkout. Nothing else is added afterwards.',
+      },
+      {
+        question: 'What is StayBook Rewards?',
+        answer:
+          'Everyone starts at Bronze. After 5 confirmed stays you move to Silver and get 10% off automatically at checkout; after 15 stays you reach Gold and get 15% off. Your tier shows on your account page.',
       },
     ],
   },
@@ -43,22 +52,29 @@ const sections = [
       {
         question: 'Do I need an account to book?',
         answer:
-          'No. Guest checkout works without an account. Signing in only adds one benefit: your bookings appear under My trips, where you can manage and cancel them.',
+          'No. Guest checkout works without an account. Signing in only adds two things: your bookings appear under My trips, and you start earning Rewards stays.',
       },
       {
         question: 'How do I list my property?',
         answer:
-          'Sign in and open "List your property" in the top bar. Fill in the name, city, type and price, and your stay appears in search results like any other hotel.',
+          'Sign in and open "List your property" in the top bar. Add the name, city, rooms and photos, and your stay appears in search like any other hotel. You can edit or remove it later from My listings.',
+      },
+      {
+        question: 'I forgot my password. What now?',
+        answer:
+          'Open the sign-in page and use "Forgot password?" — a reset link goes to your email. If it does not arrive, check spam, then write to us from the Contact page.',
       },
     ],
   },
 ];
 
 export default function HelpPage() {
+  const { t } = useLanguage();
+
   return (
     <div className="container my-4" style={{ maxWidth: 720 }}>
-      <h3>Help Center</h3>
-      <p className="text-muted">Answers to the questions guests ask most.</p>
+      <h3>{t('help.title')}</h3>
+      <p className="text-muted">{t('help.sub')}</p>
 
       {sections.map((section) => (
         <div key={section.title} className="mb-4">
@@ -73,8 +89,10 @@ export default function HelpPage() {
       ))}
 
       <p className="small text-muted">
-        Still stuck? <Link to="/">Search stays</Link> or{' '}
-        <Link to="/my-bookings">manage your trips</Link>.
+        {t('help.stuck')}{' '}
+        <Link to="/contact">{t('help.contact')}</Link>,{' '}
+        <Link to="/">{t('help.searchStays')}</Link> or{' '}
+        <Link to="/my-bookings">{t('help.manageTrips')}</Link>.
       </p>
     </div>
   );

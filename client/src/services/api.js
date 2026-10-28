@@ -33,4 +33,5 @@ export const api = {
   get: (path, auth = false) => request(path, { auth }),
   post: (path, body, auth = false) => request(path, { method: 'POST', body, auth }),
   patch: (path, body, auth = false) => request(path, { method: 'PATCH', body, auth }),
+  del: (path, auth = false) => request(path, { method: 'DELETE', auth }),
 };

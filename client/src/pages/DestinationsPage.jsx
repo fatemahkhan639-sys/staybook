@@ -1,10 +1,12 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { api } from '../services/api';
+import { useLanguage } from '../i18n';
 
 // Every city in the database with its hotel count, so guests
 // can browse by destination instead of typing a search.
 export default function DestinationsPage() {
+  const { t } = useLanguage();
   const [destinations, setDestinations] = useState([]);
 
   useEffect(() => {
@@ -16,8 +18,8 @@ export default function DestinationsPage() {
 
   return (
     <div className="container my-4">
-      <h3>Browse by destination</h3>
-      <p className="text-muted">Pick a city to see every stay there.</p>
+      <h3>{t('destinations.title')}</h3>
+      <p className="text-muted">{t('destinations.sub')}</p>
 
       <div className="row mt-3">
         {destinations.map((destination) => (
@@ -35,7 +37,8 @@ export default function DestinationsPage() {
                 <div className="card-body py-2">
                   <strong className="text-dark">{destination.city}</strong>
                   <div className="small text-muted">
-                    {destination.count} propert{destination.count === 1 ? 'y' : 'ies'}
+                    {destination.count}{' '}
+                    {destination.count === 1 ? t('destinations.property') : t('destinations.properties')}
                   </div>
                 </div>
               </div>

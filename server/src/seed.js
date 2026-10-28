@@ -11,6 +11,11 @@ const User = require('./models/User');
 const Hotel = require('./models/Hotel');
 const Booking = require('./models/Booking');
 const Review = require('./models/Review');
+const Coupon = require('./models/Coupon');
+const Wishlist = require('./models/Wishlist');
+const PriceAlert = require('./models/PriceAlert');
+const Question = require('./models/Question');
+const Payment = require('./models/Payment');
 const { insertDemoData } = require('./seedData');
 
 async function seed() {
@@ -20,6 +25,11 @@ async function seed() {
     Hotel.deleteMany({}),
     Booking.deleteMany({}),
     Review.deleteMany({}),
+    Coupon.deleteMany({}),
+    Wishlist.deleteMany({}),
+    PriceAlert.deleteMany({}),
+    Question.deleteMany({}),
+    Payment.deleteMany({}),
   ]);
 
   await insertDemoData();

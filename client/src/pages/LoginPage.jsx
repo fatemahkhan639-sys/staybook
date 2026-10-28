@@ -1,9 +1,11 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { useLanguage } from '../i18n';
 
 export default function LoginPage() {
   const { login } = useAuth();
+  const { t } = useLanguage();
   const navigate = useNavigate();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -22,10 +24,9 @@ export default function LoginPage() {
 
   return (
     <div className="container my-5" style={{ maxWidth: 420 }}>
-      <h3>Sign in</h3>
-      <p className="text-muted small">Demo account: demo@staybook.local / demo1234</p>
+      <h3>{t('auth.signIn')}</h3>
       <form onSubmit={handleSubmit}>
-        <label className="form-label small">Email address</label>
+        <label className="form-label small">{t('auth.email')}</label>
         <input
           type="email"
           className="form-control mb-3"
@@ -33,7 +34,7 @@ export default function LoginPage() {
           value={email}
           onChange={(e) => setEmail(e.target.value)}
         />
-        <label className="form-label small">Password</label>
+        <label className="form-label small">{t('auth.password')}</label>
         <input
           type="password"
           className="form-control mb-3"
@@ -43,11 +44,14 @@ export default function LoginPage() {
         />
         {error && <p className="text-danger small">{error}</p>}
         <button className="btn btn-primary w-100" type="submit">
-          Continue with email
+          {t('auth.continueEmail')}
         </button>
       </form>
-      <p className="small mt-3">
-        No account? <Link to="/register">Register</Link>
+      <p className="small mt-3 d-flex justify-content-between">
+        <span>
+          {t('auth.noAccount')} <Link to="/register">{t('nav.register')}</Link>
+        </span>
+        <Link to="/forgot-password">{t('auth.forgot')}</Link>
       </p>
     </div>
   );

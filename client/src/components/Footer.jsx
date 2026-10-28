@@ -1,31 +1,35 @@
-// Link footer, grouped the way booking sites group theirs.
-// Links with a real page behind them navigate; the rest are
-// information labels for now.
 import { Link } from 'react-router-dom';
+import { useLanguage } from '../i18n';
 
+// Link footer, grouped the way booking sites group theirs.
+// Every label here routes to a real page.
 export default function Footer() {
-  // [label, route] — route null means plain text, no page yet.
+  const { t } = useLanguage();
+
   const groups = {
-    Support: [
-      ['Contact Customer Service', '/help'],
-      ['Manage your trips', '/my-bookings'],
-      ['Help Center', '/help'],
+    [t('footer.support')]: [
+      [t('footer.contact'), '/contact'],
+      [t('footer.trips'), '/my-bookings'],
+      [t('footer.help'), '/help'],
     ],
-    Discover: [
-      ['Destinations', '/destinations'],
-      ['Cities', '/destinations'],
-      ["Today's deals", '/deals'],
-      ['Homes guests love', '/'],
+    [t('footer.discover')]: [
+      [t('footer.destinations'), '/destinations'],
+      [t('footer.deals'), '/deals'],
+      [t('footer.compare'), '/compare'],
+      [t('footer.wishlist'), '/wishlist'],
     ],
-    'Terms and settings': [
-      ['Privacy & cookies', null],
-      ['Terms & conditions', null],
+    [t('footer.terms')]: [
+      [t('footer.privacy'), '/privacy'],
+      [t('footer.termsCond'), '/terms'],
     ],
-    Partners: [
-      ['List your property', '/list-property'],
-      ['Partner help', '/help'],
+    [t('footer.partners')]: [
+      [t('footer.listProperty'), '/list-property'],
+      [t('footer.myListings'), '/my-listings'],
     ],
-    About: [['About StayBook', '/help']],
+    [t('footer.about')]: [
+      [t('footer.aboutStayBook'), '/terms'],
+      [t('footer.contact'), '/contact'],
+    ],
   };
 
   return (
@@ -38,22 +42,16 @@ export default function Footer() {
               <ul className="list-unstyled">
                 {links.map(([label, route]) => (
                   <li key={label}>
-                    {route ? (
-                      <Link to={route} className="text-muted small text-decoration-none">
-                        {label}
-                      </Link>
-                    ) : (
-                      <span className="text-muted small">{label}</span>
-                    )}
+                    <Link to={route} className="text-muted small text-decoration-none">
+                      {label}
+                    </Link>
                   </li>
                 ))}
               </ul>
             </div>
           ))}
         </div>
-        <p className="text-muted small mb-0">
-          StayBook is a demo hotel booking platform. Prices are shown in PKR per night.
-        </p>
+        <p className="text-muted small mb-0">{t('footer.tagline')}</p>
       </div>
     </footer>
   );

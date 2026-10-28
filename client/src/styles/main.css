@@ -28,3 +28,19 @@
   max-height: 420px;
   object-fit: cover;
 }
+
+/* Leaflet needs an explicit height or the map collapses. */
+.hotel-map {
+  height: 320px;
+  z-index: 0;
+}
+
+/* A host's own note, set apart from the site's voice: a card
+   with a handwritten-style face, only ever rendered when the
+   host actually wrote one. */
+.host-note {
+  background: #fffdf5;
+  border-left: 4px solid #e8c547;
+  font-family: 'Segoe Script', 'Bradley Hand', cursive;
+  font-size: 1.05rem;
+}

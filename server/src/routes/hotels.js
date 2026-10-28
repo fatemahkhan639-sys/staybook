@@ -2,6 +2,7 @@ const express = require('express');
 const Hotel = require('../models/Hotel');
 const Review = require('../models/Review');
 const { requireAuth } = require('../middleware/auth');
+const { availableUnits } = require('../services/availability');
 
 const router = express.Router();
 
@@ -16,11 +17,13 @@ function scoreLabel(score) {
 
 // GET /api/hotels — search + filters + sorting.
 // Query params: destination, type, minPrice, maxPrice, minStars,
-// minScore, amenities (comma separated), freeCancellation, sort, page, limit.
+// minScore, amenities (comma separated), freeCancellation,
+// breakfastIncluded, bedType, sort, page, limit.
 router.get('/', async (req, res) => {
   const {
     destination, type, minPrice, maxPrice, minStars, minScore,
-    amenities, freeCancellation, deals, sort, page = 1, limit = 20,
+    amenities, freeCancellation, breakfastIncluded, bedType,
+    deals, sort, page = 1, limit = 20,
   } = req.query;
 
   const filter = {};
@@ -45,6 +48,15 @@ router.get('/', async (req, res) => {
   }
   if (freeCancellation === 'true') {
     filter['rooms.freeCancellation'] = true;
+  }
+  if (breakfastIncluded === 'true') {
+    filter['rooms.breakfastIncluded'] = true;
+  }
+  if (bedType) {
+    // Bed names in the data read like "Double bed" or
+    // "King bed + double bed", so match the chosen word
+    // anywhere in the room's bed setup.
+    filter['rooms.bedType'] = { $regex: bedType, $options: 'i' };
   }
   // Deals page: only stays whose original price is higher than
   // the price guests actually pay.
@@ -97,8 +109,10 @@ router.get('/meta/destinations', async (req, res) => {
 });
 
 // GET /api/hotels/:id — full detail page, with its reviews.
+// With checkIn/checkOut query params, each room also reports how
+// many units are still free for those dates.
 router.get('/:id', async (req, res) => {
-  const hotel = await Hotel.findById(req.params.id);
+  const hotel = await Hotel.findById(req.params.id).populate('listedBy', 'name');
   if (!hotel) return res.status(404).json({ message: 'Hotel not found.' });
 
   const reviews = await Review.find({ hotel: hotel._id })
@@ -106,13 +120,59 @@ router.get('/:id', async (req, res) => {
     .sort({ createdAt: -1 })
     .limit(20);
 
-  return res.json({ ...hotel.toObject(), scoreLabel: scoreLabel(hotel.reviewScore), reviews });
+  const data = hotel.toObject();
+  const { checkIn, checkOut } = req.query;
+  if (checkIn && checkOut) {
+    data.rooms = await Promise.all(
+      data.rooms.map(async (room) => ({
+        ...room,
+        availableUnits: await availableUnits(hotel, room, checkIn, checkOut),
+      }))
+    );
+  }
+
+  return res.json({ ...data, scoreLabel: scoreLabel(hotel.reviewScore), reviews });
 });
 
 // POST /api/hotels — list a property (signed-in guests only).
 router.post('/', requireAuth, async (req, res) => {
   const hotel = await Hotel.create({ ...req.body, listedBy: req.userId });
   return res.status(201).json(hotel);
+});
+
+// PATCH/DELETE /api/hotels/:id — the host who listed it, or an
+// admin. (The admin routes also cover these for the admin panel;
+// this pair is what "My listings" uses, so a host never needs
+// admin rights to fix their own listing.)
+async function loadOwnedHotel(req, res, next) {
+  const hotel = await Hotel.findById(req.params.id);
+  if (!hotel) return res.status(404).json({ message: 'Hotel not found.' });
+  const owner = hotel.listedBy && String(hotel.listedBy);
+  if (owner === req.userId) {
+    req.hotel = hotel;
+    return next();
+  }
+  const User = require('../models/User');
+  const user = await User.findById(req.userId);
+  if (user && user.role === 'admin') {
+    req.hotel = hotel;
+    return next();
+  }
+  return res.status(403).json({ message: 'Not your listing.' });
+}
+
+router.patch('/:id', requireAuth, loadOwnedHotel, async (req, res) => {
+  const allowed = ['name', 'pricePerNight', 'description'];
+  allowed.forEach((field) => {
+    if (req.body[field] !== undefined) req.hotel[field] = req.body[field];
+  });
+  await req.hotel.save();
+  return res.json(req.hotel);
+});
+
+router.delete('/:id', requireAuth, loadOwnedHotel, async (req, res) => {
+  await req.hotel.deleteOne();
+  return res.json({ message: 'Listing deleted.' });
 });
 
 module.exports = router;

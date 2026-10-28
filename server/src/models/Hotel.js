@@ -10,6 +10,9 @@ const roomSchema = new mongoose.Schema(
     sizeSqm: { type: Number, default: 20 },
     bedType: { type: String, default: 'Double bed' },
     maxGuests: { type: Number, default: 2 },
+    // How many identical units of this room the property can sell
+    // for the same night. Bookings count against this.
+    totalUnits: { type: Number, default: 5 },
     pricePerNight: { type: Number, required: true },
     freeCancellation: { type: Boolean, default: false },
     breakfastIncluded: { type: Boolean, default: false },
@@ -39,6 +42,27 @@ const hotelSchema = new mongoose.Schema(
     distanceFromCenter: { type: Number, default: null },
     images: { type: [String], default: [] },
     description: { type: String, default: '' },
+    // Coordinates are optional: older listings were seeded without
+    // them, and the map just hides when they are missing.
+    lat: { type: Number, default: null },
+    lng: { type: Number, default: null },
+    nearby: {
+      type: [
+        {
+          name: { type: String, required: true },
+          distanceKm: { type: Number, required: true },
+          kind: { type: String, default: 'place' },
+          _id: false,
+        },
+      ],
+      default: [],
+    },
+    // Extra rules that do not fit the standard house-rules box,
+    // e.g. "No parties" or a damage-deposit note.
+    finePrint: { type: String, default: '' },
+    // A short note in the owner's own words, shown on the hotel
+    // page only when the host actually wrote one.
+    hostNote: { type: String, default: '' },
     amenities: { type: [String], default: [] },
     rooms: { type: [roomSchema], default: [] },
     houseRules: {

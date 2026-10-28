@@ -2,10 +2,14 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { api } from '../services/api';
 import { useAuth } from '../context/AuthContext';
+import { useCurrency } from '../context/CurrencyContext';
+import { useLanguage } from '../i18n';
 
 // "Manage your trips": the signed-in guest's bookings, with cancel.
 export default function MyBookingsPage() {
   const { user } = useAuth();
+  const { format } = useCurrency();
+  const { t } = useLanguage();
   const [bookings, setBookings] = useState([]);
 
   useEffect(() => {
@@ -23,7 +27,7 @@ export default function MyBookingsPage() {
     return (
       <div className="container my-5">
         <p>
-          Please <Link to="/login">sign in</Link> to see your trips.
+          {t('bookings.signInPrompt')} <Link to="/login">{t('nav.signIn')}</Link>
         </p>
       </div>
     );
@@ -31,8 +35,8 @@ export default function MyBookingsPage() {
 
   return (
     <div className="container my-4">
-      <h3>My trips</h3>
-      {bookings.length === 0 && <p className="text-muted">You have no bookings yet.</p>}
+      <h3>{t('bookings.title')}</h3>
+      {bookings.length === 0 && <p className="text-muted">{t('bookings.none')}</p>}
       {bookings.map((booking) => (
         <div className="card p-3 mb-3" key={booking._id}>
           <div className="d-flex justify-content-between">
@@ -43,8 +47,12 @@ export default function MyBookingsPage() {
                 {new Date(booking.checkOut).toLocaleDateString()} · {booking.nights} night
                 {booking.nights > 1 ? 's' : ''}
               </p>
-              <p className="mb-0">
-                Total: <strong>Rs {booking.totalPrice.toLocaleString()}</strong>
+              <p className="mb-1">
+                {t('bookings.total')}: <strong>{format(booking.totalPrice)}</strong>
+              </p>
+              <p className="small text-muted mb-0">
+                {t('bookings.payment')}: {booking.paymentMethod || 'payAtProperty'} ·{' '}
+                {booking.paymentStatus || 'unpaid'}
               </p>
             </div>
             <div className="text-end">
@@ -59,7 +67,7 @@ export default function MyBookingsPage() {
                     className="btn btn-outline-danger btn-sm mt-2"
                     onClick={() => cancel(booking._id)}
                   >
-                    Cancel booking
+                    {t('bookings.cancel')}
                   </button>
                 </div>
               )}

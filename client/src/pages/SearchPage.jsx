@@ -4,10 +4,14 @@ import SearchBar from '../components/SearchBar';
 import FilterSidebar from '../components/FilterSidebar';
 import HotelCard from '../components/HotelCard';
 import { api } from '../services/api';
+import { useLanguage } from '../i18n';
 
 // Results page: reads the search from the URL, fetches matching
 // hotels, and re-fetches whenever a filter or sort changes.
+// Dates and guest counts go to the API too, so rooms that do
+// not fit the party never show up in the first place.
 export default function SearchPage() {
+  const { t } = useLanguage();
   const [params] = useSearchParams();
   const [hotels, setHotels] = useState([]);
   const [total, setTotal] = useState(0);
@@ -22,6 +26,8 @@ export default function SearchPage() {
     minScore: '',
     amenities: [],
     freeCancellation: false,
+    breakfastIncluded: false,
+    bedType: '',
   });
 
   // The booking query (dates, guests) rides along to the hotel page.
@@ -58,14 +64,27 @@ export default function SearchPage() {
       minScore: filters.minScore,
       amenities: filters.amenities.join(','),
       freeCancellation: filters.freeCancellation ? 'true' : '',
-      sort,
+      breakfastIncluded: filters.breakfastIncluded ? 'true' : '',
+      bedType: filters.bedType,
+      adults: params.get('adults') || '',
+      children: params.get('children') || '',
+      sort: sort === 'distance' ? '' : sort,
     });
 
     setLoading(true);
     api
       .get(`/api/hotels?${query.toString()}`)
       .then((data) => {
-        setHotels(data.hotels);
+        let rows = data.hotels;
+        // Distance sort is done here, not on the server: the
+        // field already comes back on every hotel, and sorting
+        // a page of results client-side keeps the API simpler.
+        if (sort === 'distance') {
+          rows = [...rows].sort(
+            (a, b) => (a.distanceFromCenter ?? 999) - (b.distanceFromCenter ?? 999)
+          );
+        }
+        setHotels(rows);
         setTotal(data.total);
       })
       .catch(() => {
@@ -87,7 +106,7 @@ export default function SearchPage() {
         <div className="col-md-9">
           <div className="d-flex justify-content-between align-items-center mb-3">
             <h5 className="mb-0">
-              {loading ? 'Searching…' : `${total} properties found`}
+              {loading ? t('common.searching') : `${total} ${t('common.searchResults')}`}
             </h5>
             <select
               className="form-select form-select-sm w-auto"
@@ -95,10 +114,11 @@ export default function SearchPage() {
               onChange={(e) => setSort(e.target.value)}
               aria-label="Sort results"
             >
-              <option value="top">Our top picks</option>
-              <option value="priceAsc">Price: low to high</option>
-              <option value="priceDesc">Price: high to low</option>
-              <option value="rating">Star rating</option>
+              <option value="top">{t('sort.top')}</option>
+              <option value="priceAsc">{t('sort.priceAsc')}</option>
+              <option value="priceDesc">{t('sort.priceDesc')}</option>
+              <option value="rating">{t('sort.rating')}</option>
+              <option value="distance">{t('sort.distance')}</option>
             </select>
           </div>
 
@@ -106,11 +126,7 @@ export default function SearchPage() {
             <HotelCard key={hotel._id} hotel={hotel} query={bookingQuery} />
           ))}
 
-          {!loading && hotels.length === 0 && (
-            <p className="text-muted">
-              No stays match those filters. Try widening the budget or clearing a filter.
-            </p>
-          )}
+          {!loading && hotels.length === 0 && <p className="text-muted">{t('common.noMatch')}</p>}
         </div>
       </div>
     </div>

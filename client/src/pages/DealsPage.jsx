@@ -1,10 +1,12 @@
 import { useEffect, useState } from 'react';
 import HotelCard from '../components/HotelCard';
 import { api } from '../services/api';
+import { useLanguage } from '../i18n';
 
-// Today's deals: every stay whose original price is higher than
-// the price guests actually pay, cheapest first.
+// Stays with a cut price, cheapest first. The discount is
+// already in the nightly rate — there is no code to apply.
 export default function DealsPage() {
+  const { t } = useLanguage();
   const [hotels, setHotels] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -18,15 +20,11 @@ export default function DealsPage() {
 
   return (
     <div className="container my-4">
-      <h3>Today&apos;s deals</h3>
-      <p className="text-muted">
-        Stays with a cut price. The discount is already applied — what you see is what you pay.
-      </p>
+      <h3>{t('deals.title')}</h3>
+      <p className="text-muted">{t('deals.sub')}</p>
 
-      {loading && <p>Loading deals…</p>}
-      {!loading && hotels.length === 0 && (
-        <p className="text-muted">No deals right now. Check back soon.</p>
-      )}
+      {loading && <p>{t('deals.loading')}</p>}
+      {!loading && hotels.length === 0 && <p className="text-muted">{t('deals.none')}</p>}
       {hotels.map((hotel) => (
         <HotelCard key={hotel._id} hotel={hotel} />
       ))}

@@ -1,9 +1,11 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { useLanguage } from '../i18n';
 
 export default function RegisterPage() {
   const { register } = useAuth();
+  const { t } = useLanguage();
   const navigate = useNavigate();
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
@@ -23,16 +25,16 @@ export default function RegisterPage() {
 
   return (
     <div className="container my-5" style={{ maxWidth: 420 }}>
-      <h3>Create your account</h3>
+      <h3>{t('auth.createAccount')}</h3>
       <form onSubmit={handleSubmit}>
-        <label className="form-label small">Full name</label>
+        <label className="form-label small">{t('auth.fullName')}</label>
         <input
           className="form-control mb-3"
           required
           value={name}
           onChange={(e) => setName(e.target.value)}
         />
-        <label className="form-label small">Email address</label>
+        <label className="form-label small">{t('auth.email')}</label>
         <input
           type="email"
           className="form-control mb-3"
@@ -40,7 +42,7 @@ export default function RegisterPage() {
           value={email}
           onChange={(e) => setEmail(e.target.value)}
         />
-        <label className="form-label small">Password</label>
+        <label className="form-label small">{t('auth.password')}</label>
         <input
           type="password"
           className="form-control mb-3"
@@ -50,11 +52,11 @@ export default function RegisterPage() {
         />
         {error && <p className="text-danger small">{error}</p>}
         <button className="btn btn-primary w-100" type="submit">
-          Create account
+          {t('auth.createAccount')}
         </button>
       </form>
       <p className="small mt-3">
-        Already have an account? <Link to="/login">Sign in</Link>
+        {t('auth.haveAccount')} <Link to="/login">{t('nav.signIn')}</Link>
       </p>
     </div>
   );

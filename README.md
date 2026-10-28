@@ -1,118 +1,102 @@
 # StayBook — hotel booking platform
 
-A full MERN-stack hotel booking website, built with the same pages
-and booking flow as the big booking sites: search, filters, hotel
-detail pages, a three-step checkout, guest reviews, accounts, and
-trip management.
+A hotel booking website for Pakistan: search stays across 15 cities,
+check real room availability, and book with the price worked out in
+rupees. React + Vite + Bootstrap on the front, Express + MongoDB
+(Mongoose) on the back.
 
-## Stack
+## What it does
 
-- **Frontend:** React (Vite) + Bootstrap + React Router
-- **Backend:** Node.js + Express
-- **Database:** MongoDB (Mongoose)
+- **Search + filters:** destination, budget, property type, stars,
+  review score, amenities, free cancellation, breakfast, bed type.
+  Sort by price, rating, or distance from the city center.
+- **Hotel pages:** photo gallery, map with the approximate area,
+  nearby places, category review scores, house rules and fine print,
+  host notes, guest reviews with host replies, Q&A, and a room table
+  that shows how many units are actually free for your dates.
+- **Checkout in three steps:** your selection, your details, finish.
+  The price shows its working: subtotal + 16% GST, minus your
+  loyalty discount and any coupon.
+- **Payments:** pay at the property (the default), card via Stripe,
+  or JazzCash/Easypaisa with a transaction ID that an admin verifies
+  by hand. Card and email only switch on once their keys are set
+  (see below) — nothing is ever faked as paid.
+- **Accounts:** sign up, sign in, forgot/reset password, email
+  verification, your trips with cancel, wishlist, price alerts,
+  loyalty tier (Bronze, Silver 10% off after 5 stays, Gold 15% off
+  after 15), and your own listings with edit and delete.
+- **Admin page (`/admin`):** latest bookings, payments with manual
+  wallet verification, and coupon management.
+- **Hosts:** list a property with rooms, photos, rules and location.
+- **Languages:** English and Urdu. **Currencies:** PKR, USD, EUR, GBP
+  (display only — the server always stores PKR).
 
-## Pages
+## Demo data
 
-| Route | Page |
-| --- | --- |
-| `/` | Homepage — hero search, property types, offers, featured stays, destinations |
-| `/search` | Results — destination search, budget/type/stars/score/amenity filters, sorting |
-| `/hotel/:id` | Property detail — gallery, amenities, room availability table, house rules, reviews |
-| `/checkout` | Booking flow — 1. Your selection, 2. Your details, 3. Finish booking |
-| `/deals` | Today's deals — stays with a cut price and discount badge |
-| `/destinations` | Browse by destination — every city with its hotel count |
-| `/help` | Help Center — booking, payment and account questions, answered |
-| `/login`, `/register` | Sign in / create an account |
-| `/my-bookings` | Manage your trips — view and cancel bookings |
-| `/list-property` | List your own property |
+24 stays across 15 Pakistani cities, each written out individually
+(no two listings read the same), with guest reviews, deals, and
+three discount codes: WELCOME10 (10%), STAY15 (15%), FAMILY20 (20%).
 
-Demo data: 24 stays across 15 Pakistani cities in 7 property types
-(Hotel, Apartment, Resort, Villa, Hostel, Lodge, Guest House), with
-discount deals on some stays and guest reviews on every hotel, so
-no page looks empty. Adding another hotel is one new row in
-`server/src/seedData.js`.
+Sign in with:
+
+- Guest: demo@staybook.local / demo1234
+- Admin: admin@staybook.local / admin1234
+
+These accounts live in the seed data, not in the code. On a fresh
+database the server inserts them on first start; run `npm run seed`
+in `server/` any time you want to reset the data. A new hotel is one
+new entry in `server/src/seedData.js`.
 
 ## Run it
 
 ```bash
-# 0. Server settings file — pehli dafa zaroori hai, warna login
-#    kaam nahi kare ga. server/.env.example ko copy karke server/.env
-#    naam dein (andar ki values waisi hi rehne dein).
-#    Windows:  copy .env.example .env
-#    Mac/Linux: cp .env.example .env
-
-# 1. Backend (port 5000) — terminal 1
-cd server
-npm install
-npm run dev
-
-# 2. Frontend (port 5173) — terminal 2 (pehli terminal khuli rakhen)
-cd client
-npm install
-npm run dev
+# Server settings first: copy server/.env.example to server/.env
+# and fill it in (JWT_SECRET is required, the rest can wait).
+cd server && npm install && npm run dev
+cd ../client && npm install && npm run dev
 ```
 
-Open http://localhost:5173.
+Server on :5000, client on :5173. With MONGO_URI empty the server
+uses an in-memory database, so it runs on a fresh machine with
+nothing to install.
 
-**Demo account:** demo@staybook.local / demo1234
+## Settings
 
-> Note: database khaali ho to server pehli dafa khud hi 4 demo
-> hotels aur demo account daal deta hai, is liye `npm run seed`
-> sirf data reset karne ke liye hai, roz chalane ke liye nahi.
+Server (`server/.env`):
 
-## Database
+| Variable | Needed for |
+| --- | --- |
+| MONGO_URI | A real database (Atlas or local mongod). Empty = in-memory, data gone on restart. |
+| JWT_SECRET | Sign-in tokens. Required — the server refuses to start without it. |
+| CLIENT_URL | The frontend origin allowed to call the API, and the links in emails. |
+| SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS, SMTP_FROM | Emails (welcome, verification, password reset, booking). Without these the site works fine, it just skips sending mail. |
+| STRIPE_SECRET_KEY | Card payments. Without it the card option stays hidden. |
+| STRIPE_WEBHOOK_SECRET | The webhook at `/api/payments/webhook` that marks card payments paid. Register the URL in the Stripe dashboard. |
 
-If `MONGO_URI` is set in `server/.env` (local MongoDB or a MongoDB
-Atlas cluster), the server uses it. Otherwise it starts an
-in-memory MongoDB automatically, so the project runs anywhere
-without installing MongoDB first. Copy `server/.env.example` to
-`server/.env` and fill in your values.
+Client: `VITE_STRIPE_PUBLISHABLE_KEY` — the card option appears only
+when this is set (together with the server key above).
 
-On this machine a MongoDB binary is already extracted at
-`server/.mongodb-bin/bin/mongod`. Start it once with:
+## Live deployment
 
-```bash
-./server/.mongodb-bin/bin/mongod --dbpath ./server/.mongodb-data \
-  --bind_ip 127.0.0.1 --port 27017 --fork \
-  --logpath ./server/.mongodb-data/mongod.log
-```
-
-Then `MONGO_URI=mongodb://127.0.0.1:27017/staybook` in `server/.env`
-just works. On your own computer, install MongoDB normally or use
-a free Atlas cluster instead.
-
-## How the booking flow works
-
-1. Search a destination and dates, open a hotel, pick a room and
-   room count in the availability table.
-2. Step 1 shows the selection and total. "I'll reserve" moves on —
-   nothing is charged yet.
-3. Step 2 collects guest details (works signed in or as a guest).
-4. Step 3 confirms the booking and shows its reference. Signed-in
-   guests find it under "My trips", where they can cancel it.
+- Frontend: Vercel (project "staybook", root `client`). `/api/*`
+  rewrites to the Render backend; everything else falls back to
+  `index.html`, so deep links work.
+- Backend: Render (service `staybook-api`, root `server`,
+  `npm install` then `npm start`). Free instances sleep when idle,
+  so the first request after a while takes a minute to wake up.
+- Database: MongoDB Atlas (free cluster).
+- Both Vercel and Render redeploy automatically on push to `main`.
+- One note on the demo data: a database holding the very first demo
+  dataset (listings without coordinates) is upgraded to the
+  rewritten listings once, automatically, on the next server start.
+  Registered users and contact messages are kept.
 
 ## Project layout
 
-```
-server/src/
-  config/db.js        database connection (real or in-memory MongoDB)
-  models/             User, Hotel, Booking, Review
-  routes/             auth, hotels, bookings, reviews
-  middleware/auth.js  JWT checks (required + optional)
-  server.js           Express app
-  seed.js             demo data
-client/src/
-  pages/              one file per page
-  components/         Navbar, SearchBar, HotelCard, FilterSidebar, Footer
-  context/            signed-in guest state
-  services/api.js     every API call goes through here
-```
-
-## Notes
-
-- Prices are in PKR per night in the demo data.
-- Email confirmation is not wired up: the confirmation step says
-  so honestly instead of pretending an email was sent.
-- Payment is intentionally not included: the reference flow
-  reserves first and charges later, and real card handling needs a
-  payment provider (Stripe) added with its own keys.
+- `client/src/pages/` — one file per page
+- `client/src/components/` — cards, search bar, filters, map, navbar, footer
+- `client/src/i18n/` — English and Urdu strings
+- `server/src/routes/` — API endpoints
+- `server/src/models/` — MongoDB schemas
+- `server/src/services/` — availability, loyalty, coupons, email
+- `server/src/seedData.js` — demo listings, reviews, users, coupons

@@ -1,10 +1,12 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useLanguage } from '../i18n';
 
 // The destination / dates / guests form from the homepage hero.
 // Submitting it moves to /search with the same values in the URL,
 // so results are shareable and bookmarkable.
 export default function SearchBar({ initial = {} }) {
+  const { t } = useLanguage();
   const navigate = useNavigate();
   const [destination, setDestination] = useState(initial.destination || '');
   const [checkIn, setCheckIn] = useState(initial.checkIn || '');
@@ -30,16 +32,16 @@ export default function SearchBar({ initial = {} }) {
     <form className="search-bar p-3 bg-white rounded shadow" onSubmit={handleSubmit}>
       <div className="row g-2">
         <div className="col-md-4">
-          <label className="form-label small mb-1">Where are you going?</label>
+          <label className="form-label small mb-1">{t('search.where')}</label>
           <input
             className="form-control"
-            placeholder="Search by city or hotel name"
+            placeholder={t('search.placeholder')}
             value={destination}
             onChange={(e) => setDestination(e.target.value)}
           />
         </div>
         <div className="col-md-2">
-          <label className="form-label small mb-1">Check-in</label>
+          <label className="form-label small mb-1">{t('search.checkIn')}</label>
           <input
             type="date"
             className="form-control"
@@ -48,7 +50,7 @@ export default function SearchBar({ initial = {} }) {
           />
         </div>
         <div className="col-md-2">
-          <label className="form-label small mb-1">Check-out</label>
+          <label className="form-label small mb-1">{t('search.checkOut')}</label>
           <input
             type="date"
             className="form-control"
@@ -57,7 +59,7 @@ export default function SearchBar({ initial = {} }) {
           />
         </div>
         <div className="col-md-3">
-          <label className="form-label small mb-1">Guests &amp; rooms</label>
+          <label className="form-label small mb-1">{t('search.guestsRooms')}</label>
           <div className="d-flex gap-1">
             <select
               className="form-select form-select-sm"
@@ -67,7 +69,7 @@ export default function SearchBar({ initial = {} }) {
             >
               {[1, 2, 3, 4, 5, 6].map((n) => (
                 <option key={n} value={n}>
-                  {n} adult{n > 1 ? 's' : ''}
+                  {n} {n > 1 ? t('search.adultsPlural') : t('search.adults')}
                 </option>
               ))}
             </select>
@@ -79,7 +81,7 @@ export default function SearchBar({ initial = {} }) {
             >
               {[0, 1, 2, 3, 4].map((n) => (
                 <option key={n} value={n}>
-                  {n} child{n !== 1 ? 'ren' : ''}
+                  {n} {n !== 1 ? t('search.childrenPlural') : t('search.children')}
                 </option>
               ))}
             </select>
@@ -91,7 +93,7 @@ export default function SearchBar({ initial = {} }) {
             >
               {[1, 2, 3, 4].map((n) => (
                 <option key={n} value={n}>
-                  {n} room{n > 1 ? 's' : ''}
+                  {n} {n > 1 ? t('search.roomsPlural') : t('search.room')}
                 </option>
               ))}
             </select>
@@ -99,7 +101,7 @@ export default function SearchBar({ initial = {} }) {
         </div>
         <div className="col-md-1 d-flex align-items-end">
           <button className="btn btn-primary w-100" type="submit">
-            Search
+            {t('search.search')}
           </button>
         </div>
       </div>

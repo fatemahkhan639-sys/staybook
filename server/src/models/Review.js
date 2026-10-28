@@ -8,6 +8,8 @@ const reviewSchema = new mongoose.Schema(
     hotel: { type: mongoose.Schema.Types.ObjectId, ref: 'Hotel', required: true },
     rating: { type: Number, min: 1, max: 10, required: true },
     comment: { type: String, default: '' },
+    // The property's reply to this review, if they wrote one.
+    hostReply: { type: String, default: '' },
     categories: {
       cleanliness: { type: Number, min: 1, max: 10, default: null },
       comfort: { type: Number, min: 1, max: 10, default: null },
