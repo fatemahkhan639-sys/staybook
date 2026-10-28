@@ -1,0 +1,33 @@
+// Seed script: wipes the demo data and re-inserts it.
+// Run it with:  npm run seed
+//
+// You usually do not need this: the server inserts the same demo
+// data automatically the first time it starts with an empty
+// database. Use this only when you want to reset the data.
+// Demo sign-in: demo@staybook.local / demo1234
+require('dotenv').config();
+const connectDB = require('./config/db');
+const User = require('./models/User');
+const Hotel = require('./models/Hotel');
+const Booking = require('./models/Booking');
+const Review = require('./models/Review');
+const { insertDemoData } = require('./seedData');
+
+async function seed() {
+  await connectDB();
+  await Promise.all([
+    User.deleteMany({}),
+    Hotel.deleteMany({}),
+    Booking.deleteMany({}),
+    Review.deleteMany({}),
+  ]);
+
+  await insertDemoData();
+  console.log('Seed complete: 24 hotels + demo account + guest reviews.');
+  process.exit(0);
+}
+
+seed().catch((err) => {
+  console.error('Seed failed:', err);
+  process.exit(1);
+});
